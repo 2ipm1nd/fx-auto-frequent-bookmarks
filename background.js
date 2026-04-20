@@ -119,14 +119,33 @@ function groupByDomain(bookmarks, visitMap) {
 }
 
 async function findOrCreateOutputFolder(name) {
+  // 優先用 storage 裡記住的 ID，讓資料夾可以被移動到任意位置
+  const { outputFolderId } = await browser.storage.local.get({ outputFolderId: null });
+  if (outputFolderId) {
+    try {
+      const nodes = await browser.bookmarks.get(outputFolderId);
+      if (nodes && nodes.length > 0 && !nodes[0].url) {
+        return outputFolderId;
+      }
+    } catch {
+      // ID 對應的資料夾已被刪除，繼續往下重建
+    }
+  }
+
+  // 找不到已存的 ID，改用名稱在工具列搜尋
   const toolbarChildren = await browser.bookmarks.getChildren(TOOLBAR_ID);
   const existing = toolbarChildren.find((n) => !n.url && n.title === name);
-  if (existing) return existing.id;
+  if (existing) {
+    await browser.storage.local.set({ outputFolderId: existing.id });
+    return existing.id;
+  }
 
+  // 完全找不到，在工具列新建
   const created = await browser.bookmarks.create({
     parentId: TOOLBAR_ID,
     title: name,
   });
+  await browser.storage.local.set({ outputFolderId: created.id });
   return created.id;
 }
 
