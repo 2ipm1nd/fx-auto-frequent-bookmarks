@@ -23,7 +23,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "fx-auto-frequent-bookmarks@2ipm1nd",
+      "id": "fx-auto-frequent-bookmarks@local",
       "strict_min_version": "140.0",
       "data_collection_permissions": {
         "required": ["none"],
