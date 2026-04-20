@@ -2,6 +2,7 @@ const DEFAULT_SETTINGS = {
   sourceFolderIds: [],
   sortMode: "lastVisit",
   maxResults: 20,
+  maxAgeDays: 0,
   outputFolderName: "🔥 常用書籤",
   refreshOnStartup: true,
   alarmInterval: 0,
@@ -68,6 +69,8 @@ async function saveSettings() {
     sortMode: document.getElementById("sort-mode").value,
     maxResults:
       parseInt(document.getElementById("max-results").value, 10) || 20,
+    maxAgeDays:
+      parseInt(document.getElementById("max-age-days").value, 10) || 0,
     outputFolderName:
       document.getElementById("output-name").value.trim() || "🔥 常用書籤",
     refreshOnStartup: document.getElementById("refresh-on-startup").checked,
@@ -124,6 +127,7 @@ async function init() {
 
   document.getElementById("sort-mode").value = settings.sortMode;
   document.getElementById("max-results").value = settings.maxResults;
+  document.getElementById("max-age-days").value = settings.maxAgeDays;
   document.getElementById("output-name").value = settings.outputFolderName;
   document.getElementById("refresh-on-startup").checked = settings.refreshOnStartup;
   document.getElementById("alarm-interval").value = settings.alarmInterval;

@@ -2,6 +2,7 @@ const DEFAULT_SETTINGS = {
   sourceFolderIds: [],
   sortMode: "lastVisit", // "lastVisit" | "visitCount"
   maxResults: 20,
+  maxAgeDays: 0, // 0 = 不限制，其他為天數
   outputFolderName: "🔥 常用書籤",
   refreshOnStartup: true,
   alarmInterval: 0, // 0 = 關閉，其他為分鐘數
@@ -15,6 +16,7 @@ async function readSettings() {
 }
 
 async function collectBookmarks(folderIds) {
+  const folderSet = new Set(folderIds);
   const results = [];
 
   async function traverse(nodeId) {
@@ -28,7 +30,7 @@ async function collectBookmarks(folderIds) {
     for (const child of children) {
       if (child.url) {
         results.push({ id: child.id, title: child.title, url: child.url });
-      } else {
+      } else if (folderSet.has(child.id)) {
         await traverse(child.id);
       }
     }
@@ -184,7 +186,12 @@ async function runPipeline() {
   }
 
   const visitMap = await queryVisits(bookmarks);
-  const groups = groupByDomain(bookmarks, visitMap);
+  let groups = groupByDomain(bookmarks, visitMap);
+
+  if (settings.maxAgeDays > 0) {
+    const cutoff = Date.now() - settings.maxAgeDays * 86400000;
+    groups = groups.filter((g) => g.lastVisitTime > 0 && g.lastVisitTime >= cutoff);
+  }
 
   if (settings.sortMode === "visitCount") {
     groups.sort((a, b) => b.totalVisits - a.totalVisits);

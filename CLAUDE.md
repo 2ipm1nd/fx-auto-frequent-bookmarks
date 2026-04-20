@@ -31,9 +31,10 @@ Firefox WebExtension，在瀏覽器啟動時自動從指定書籤資料夾讀取
 ```
 onStartup / onInstalled / onMessage("REFRESH") / alarms.onAlarm
   → readSettings()
-  → collectBookmarks(folderIds)   # 遞迴 getChildren，URL 去重
+  → collectBookmarks(folderIds)   # 只掃直屬書籤；子資料夾需明確勾選才遞迴，URL 去重
   → queryVisits(bookmarks)        # 循序呼叫 history.getVisits
   → groupByDomain(bookmarks, map) # 依 hostname 分組，選代表 URL
+  → 時間篩選（maxAgeDays > 0 時過濾 lastVisitTime 過舊或從未造訪的項目）
   → 排序（lastVisitTime 或 totalVisits）
   → slice(0, maxResults)
   → findOrCreateOutputFolder()    # 用 storage 記住 ID，支援資料夾移動
@@ -48,6 +49,7 @@ onStartup / onInstalled / onMessage("REFRESH") / alarms.onAlarm
 | sourceFolderIds | [] | 來源書籤資料夾 ID 陣列 |
 | sortMode | "lastVisit" | "lastVisit" 或 "visitCount" |
 | maxResults | 20 | 最多輸出筆數 |
+| maxAgeDays | 0 | 僅顯示 N 天內有造訪的書籤，0 為不限制 |
 | outputFolderName | "🔥 常用書籤" | 輸出資料夾名稱 |
 | refreshOnStartup | true | 瀏覽器啟動時是否執行 |
 | alarmInterval | 0 | 定時更新間隔（分鐘），0 為關閉 |
@@ -75,3 +77,5 @@ git push origin v1.x.x
 - outputFolderId 存進 storage，讓輸出資料夾可以被使用者自由移動
 - 同網域書籤合併：選造訪次數最多的 URL 為代表
 - alarms 在瀏覽器重開後會消失，因此 onStartup 時重新建立
+- 子資料夾不預設遞迴：collectBookmarks 以 folderSet 控制，只進入明確勾選的子資料夾
+- maxAgeDays 時間篩選在 groupByDomain 後、排序前執行，lastVisitTime === 0（從未造訪）同樣過濾
