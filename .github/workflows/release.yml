@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Sign extension (AMO self-hosted)
+        run: |
+          web-ext sign \
+            --api-key="${{ secrets.AMO_JWT_ISSUER }}" \
+            --api-secret="${{ secrets.AMO_JWT_SECRET }}" \
+            --channel=unlisted \
+            --artifacts-dir=dist
+
+      - name: Find signed XPI
+        id: xpi
+        run: |
+          path=$(find dist -name "*.xpi" | head -1)
+          echo "path=$path" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.xpi.outputs.path }}
+          generate_release_notes: true
