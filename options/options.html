@@ -28,6 +28,23 @@
 
     <label for="output-name">輸出資料夾名稱：</label>
     <input type="text" id="output-name" value="🔥 常用書籤">
+
+    <label class="checkbox-label">
+      <input type="checkbox" id="refresh-on-startup" checked>
+      瀏覽器啟動時自動重新整理
+    </label>
+
+    <label for="alarm-interval">定時自動更新：</label>
+    <select id="alarm-interval">
+      <option value="0">關閉</option>
+      <option value="15">每 15 分鐘</option>
+      <option value="30">每 30 分鐘</option>
+      <option value="60">每 1 小時</option>
+      <option value="180">每 3 小時</option>
+      <option value="360">每 6 小時</option>
+      <option value="720">每 12 小時</option>
+      <option value="1440">每 24 小時</option>
+    </select>
   </section>
 
   <section id="section-actions">

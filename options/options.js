@@ -3,6 +3,8 @@ const DEFAULT_SETTINGS = {
   sortMode: "lastVisit",
   maxResults: 20,
   outputFolderName: "🔥 常用書籤",
+  refreshOnStartup: true,
+  alarmInterval: 0,
 };
 
 async function getAllFolders() {
@@ -68,9 +70,14 @@ async function saveSettings() {
       parseInt(document.getElementById("max-results").value, 10) || 20,
     outputFolderName:
       document.getElementById("output-name").value.trim() || "🔥 常用書籤",
+    refreshOnStartup: document.getElementById("refresh-on-startup").checked,
+    alarmInterval:
+      parseInt(document.getElementById("alarm-interval").value, 10) || 0,
   };
 
   await browser.storage.local.set(settings);
+  // 通知背景腳本同步 alarm 設定
+  browser.runtime.sendMessage({ type: "SYNC_ALARM" }).catch(() => {});
   return settings;
 }
 
@@ -118,6 +125,8 @@ async function init() {
   document.getElementById("sort-mode").value = settings.sortMode;
   document.getElementById("max-results").value = settings.maxResults;
   document.getElementById("output-name").value = settings.outputFolderName;
+  document.getElementById("refresh-on-startup").checked = settings.refreshOnStartup;
+  document.getElementById("alarm-interval").value = settings.alarmInterval;
 }
 
 init().catch((err) => console.error("設定頁面初始化錯誤：", err));

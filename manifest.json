@@ -10,7 +10,8 @@
   "permissions": [
     "bookmarks",
     "history",
-    "storage"
+    "storage",
+    "alarms"
   ],
   "background": {
     "scripts": ["background.js"],

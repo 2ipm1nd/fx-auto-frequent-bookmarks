@@ -3,6 +3,8 @@ const DEFAULT_SETTINGS = {
   sortMode: "lastVisit", // "lastVisit" | "visitCount"
   maxResults: 20,
   outputFolderName: "🔥 常用書籤",
+  refreshOnStartup: true,
+  alarmInterval: 0, // 0 = 關閉，其他為分鐘數
 };
 
 const TOOLBAR_ID = "toolbar_____";
@@ -199,10 +201,32 @@ async function runPipeline() {
   console.info(`Auto Frequent Bookmarks：已寫入 ${topGroups.length} 筆。`);
 }
 
-browser.runtime.onStartup.addListener(() => {
-  runPipeline().catch((err) =>
-    console.error("Pipeline 啟動錯誤：", err)
-  );
+async function syncAlarm(settings) {
+  await browser.alarms.clear("autoRefresh");
+  if (settings.alarmInterval > 0) {
+    browser.alarms.create("autoRefresh", {
+      periodInMinutes: settings.alarmInterval,
+    });
+  }
+}
+
+browser.runtime.onInstalled.addListener(() => {
+  runPipeline().catch((err) => console.error("Pipeline 安裝後首次執行錯誤：", err));
+});
+
+browser.runtime.onStartup.addListener(async () => {
+  const settings = await readSettings();
+  if (settings.refreshOnStartup) {
+    runPipeline().catch((err) => console.error("Pipeline 啟動錯誤：", err));
+  }
+  // 瀏覽器重開後 alarm 會消失，需重新建立
+  await syncAlarm(settings);
+});
+
+browser.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === "autoRefresh") {
+    runPipeline().catch((err) => console.error("Pipeline 定時執行錯誤：", err));
+  }
 });
 
 browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -214,5 +238,9 @@ browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         sendResponse({ success: false, error: err.message });
       });
     return true;
+  }
+  if (message.type === "SYNC_ALARM") {
+    readSettings().then(syncAlarm).catch(console.error);
+    return false;
   }
 });
