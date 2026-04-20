@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Auto Frequent Bookmarks — 設定</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1>Auto Frequent Bookmarks 設定</h1>
+
+  <section>
+    <h2>來源資料夾</h2>
+    <p>勾選要掃描的書籤資料夾，擴充套件將從這些資料夾中找出常用書籤。</p>
+    <div id="folder-tree">載入中…</div>
+  </section>
+
+  <section>
+    <h2>設定</h2>
+
+    <label for="sort-mode">排序方式：</label>
+    <select id="sort-mode">
+      <option value="lastVisit">最近造訪時間</option>
+      <option value="visitCount">總造訪次數</option>
+    </select>
+
+    <label for="max-results">最多顯示筆數：</label>
+    <input type="number" id="max-results" min="1" max="100" value="20">
+
+    <label for="output-name">輸出資料夾名稱：</label>
+    <input type="text" id="output-name" value="🔥 常用書籤">
+  </section>
+
+  <section id="section-actions">
+    <button id="btn-save">儲存設定</button>
+    <button id="btn-refresh">立即重新整理</button>
+    <p id="status-message" aria-live="polite"></p>
+  </section>
+
+  <script src="options.js"></script>
+</body>
+</html>

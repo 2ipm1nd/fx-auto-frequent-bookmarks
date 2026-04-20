@@ -1,0 +1,126 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+h2 {
+  font-size: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 4px;
+  margin-top: 0;
+}
+
+section {
+  margin-bottom: 28px;
+}
+
+p {
+  font-size: 0.88rem;
+  color: #555;
+  margin: 4px 0 10px;
+}
+
+label {
+  display: block;
+  margin: 12px 0 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+select,
+input[type="number"],
+input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+#folder-tree {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 0.88rem;
+  line-height: 2;
+  background: #fafafa;
+}
+
+#folder-tree label {
+  font-weight: normal;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#folder-tree label:hover {
+  background: #f0f0f0;
+  border-radius: 3px;
+}
+
+#folder-tree input[type="checkbox"] {
+  width: auto;
+  flex-shrink: 0;
+}
+
+#section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+#btn-save {
+  background: #0060df;
+  color: #fff;
+}
+
+#btn-save:hover {
+  background: #003eaa;
+}
+
+#btn-refresh {
+  background: #f0f0f0;
+  color: #1a1a1a;
+  border: 1px solid #ccc;
+}
+
+#btn-refresh:hover {
+  background: #e0e0e0;
+}
+
+#status-message {
+  font-size: 0.85rem;
+  min-height: 1.2em;
+  width: 100%;
+}
+
+#status-message.success {
+  color: #058b00;
+}
+
+#status-message.error {
+  color: #d70022;
+}

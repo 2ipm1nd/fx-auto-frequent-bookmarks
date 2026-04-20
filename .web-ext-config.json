@@ -1,0 +1,12 @@
+{
+  "verbose": false,
+  "build": {
+    "overwriteDest": true
+  },
+  "ignoreFiles": [
+    ".web-ext-config.json",
+    ".git",
+    ".gitignore",
+    "*.md"
+  ]
+}

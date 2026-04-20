@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Auto Frequent Bookmarks",
+  "version": "1.0.0",
+  "description": "根據瀏覽歷史自動維護常用書籤資料夾",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "permissions": [
+    "bookmarks",
+    "history",
+    "storage"
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "fx-auto-frequent-bookmarks@local",
+      "strict_min_version": "109.0"
+    }
+  }
+}
