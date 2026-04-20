@@ -5,7 +5,7 @@ const DEFAULT_SETTINGS = {
   outputFolderName: "🔥 常用書籤",
 };
 
-const TOOLBAR_ID = "toolbar____";
+const TOOLBAR_ID = "toolbar_____";
 
 async function readSettings() {
   const stored = await browser.storage.local.get(DEFAULT_SETTINGS);
