@@ -155,7 +155,9 @@ async function findOrCreateOutputFolder(name) {
 
   // 找不到已存的 ID，改用名稱在工具列搜尋
   const toolbarChildren = await browser.bookmarks.getChildren(TOOLBAR_ID);
-  const existing = toolbarChildren.find((n) => !n.url && n.title === name);
+  const existing = toolbarChildren.find(
+    (n) => !n.url && (n.title === name || n.title.startsWith(name + "（"))
+  );
   if (existing) {
     await browser.storage.local.set({ outputFolderId: existing.id });
     return existing.id;
