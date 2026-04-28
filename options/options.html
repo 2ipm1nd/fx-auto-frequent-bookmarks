@@ -21,6 +21,7 @@
     <select id="sort-mode">
       <option value="lastVisit">最近造訪時間</option>
       <option value="visitCount">總造訪次數</option>
+      <option value="weighted">加權綜合（次數＋時間衰減）</option>
     </select>
 
     <label for="max-results">最多顯示筆數：</label>
@@ -39,6 +40,11 @@
     <input type="text" id="output-name" value="🔥 常用書籤">
 
     <label class="checkbox-label">
+      <input type="checkbox" id="show-timestamp">
+      在資料夾名稱後顯示更新時間（例：🔥 常用書籤（04/28 14:32））
+    </label>
+
+    <label class="checkbox-label">
       <input type="checkbox" id="refresh-on-startup" checked>
       瀏覽器啟動時自動重新整理
     </label>
@@ -54,6 +60,18 @@
       <option value="720">每 12 小時</option>
       <option value="1440">每 24 小時</option>
     </select>
+  </section>
+
+  <section>
+    <h2>排除清單</h2>
+    <p>不希望出現在常用書籤的網域，每行填入一個 hostname（例如 google.com）。</p>
+    <textarea id="excluded-domains" rows="4" placeholder="google.com&#10;mail.google.com&#10;youtube.com"></textarea>
+  </section>
+
+  <section>
+    <h2>置頂書籤</h2>
+    <p>永遠排在最前面的書籤，每行填入一個完整 URL。只有在來源資料夾內有該書籤時才會生效。</p>
+    <textarea id="pinned-urls" rows="4" placeholder="https://example.com/&#10;https://work.example.com/dashboard"></textarea>
   </section>
 
   <section id="section-actions">

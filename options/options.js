@@ -6,6 +6,9 @@ const DEFAULT_SETTINGS = {
   outputFolderName: "🔥 常用書籤",
   refreshOnStartup: true,
   alarmInterval: 0,
+  excludedDomains: [],
+  pinnedUrls: [],
+  showTimestamp: false,
 };
 
 async function getAllFolders() {
@@ -73,9 +76,18 @@ async function saveSettings() {
       parseInt(document.getElementById("max-age-days").value, 10) || 0,
     outputFolderName:
       document.getElementById("output-name").value.trim() || "🔥 常用書籤",
+    showTimestamp: document.getElementById("show-timestamp").checked,
     refreshOnStartup: document.getElementById("refresh-on-startup").checked,
     alarmInterval:
       parseInt(document.getElementById("alarm-interval").value, 10) || 0,
+    excludedDomains: document.getElementById("excluded-domains").value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    pinnedUrls: document.getElementById("pinned-urls").value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean),
   };
 
   await browser.storage.local.set(settings);
@@ -129,8 +141,13 @@ async function init() {
   document.getElementById("max-results").value = settings.maxResults;
   document.getElementById("max-age-days").value = settings.maxAgeDays;
   document.getElementById("output-name").value = settings.outputFolderName;
+  document.getElementById("show-timestamp").checked = !!settings.showTimestamp;
   document.getElementById("refresh-on-startup").checked = settings.refreshOnStartup;
   document.getElementById("alarm-interval").value = settings.alarmInterval;
+  document.getElementById("excluded-domains").value =
+    (settings.excludedDomains || []).join("\n");
+  document.getElementById("pinned-urls").value =
+    (settings.pinnedUrls || []).join("\n");
 }
 
 init().catch((err) => console.error("設定頁面初始化錯誤：", err));

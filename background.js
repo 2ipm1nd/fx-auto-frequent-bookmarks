@@ -1,11 +1,14 @@
 const DEFAULT_SETTINGS = {
   sourceFolderIds: [],
-  sortMode: "lastVisit", // "lastVisit" | "visitCount"
+  sortMode: "lastVisit", // "lastVisit" | "visitCount" | "weighted"
   maxResults: 20,
   maxAgeDays: 0, // 0 = 不限制，其他為天數
   outputFolderName: "🔥 常用書籤",
   refreshOnStartup: true,
   alarmInterval: 0, // 0 = 關閉，其他為分鐘數
+  excludedDomains: [], // 排除的 hostname 清單
+  pinnedUrls: [],      // 永遠置頂的 URL 清單
+  showTimestamp: false, // 是否在資料夾名稱後顯示更新時間
 };
 
 const TOOLBAR_ID = "toolbar_____";
@@ -122,6 +125,20 @@ function groupByDomain(bookmarks, visitMap) {
   return groups;
 }
 
+function weightedScore(totalVisits, lastVisitTime, halfLifeDays = 30) {
+  const daysSince = (Date.now() - lastVisitTime) / 86400000;
+  return totalVisits * Math.exp(-daysSince / halfLifeDays);
+}
+
+function applyPinnedUrls(groups, pinnedUrls) {
+  if (!pinnedUrls.length) return groups;
+  const pinnedSet = new Set(pinnedUrls);
+  const urlToGroup = new Map(groups.map((g) => [g.representativeUrl, g]));
+  const pinned = pinnedUrls.map((url) => urlToGroup.get(url)).filter(Boolean);
+  const rest = groups.filter((g) => !pinnedSet.has(g.representativeUrl));
+  return [...pinned, ...rest];
+}
+
 async function findOrCreateOutputFolder(name) {
   // 優先用 storage 裡記住的 ID，讓資料夾可以被移動到任意位置
   const { outputFolderId } = await browser.storage.local.get({ outputFolderId: null });
@@ -188,6 +205,14 @@ async function runPipeline() {
   const visitMap = await queryVisits(bookmarks);
   let groups = groupByDomain(bookmarks, visitMap);
 
+  // 排除黑名單網域
+  const excludedSet = new Set(
+    (settings.excludedDomains || []).map((d) => d.trim().toLowerCase()).filter(Boolean)
+  );
+  if (excludedSet.size > 0) {
+    groups = groups.filter((g) => !excludedSet.has(g.hostname));
+  }
+
   if (settings.maxAgeDays > 0) {
     const cutoff = Date.now() - settings.maxAgeDays * 86400000;
     groups = groups.filter((g) => g.lastVisitTime > 0 && g.lastVisitTime >= cutoff);
@@ -195,15 +220,48 @@ async function runPipeline() {
 
   if (settings.sortMode === "visitCount") {
     groups.sort((a, b) => b.totalVisits - a.totalVisits);
+  } else if (settings.sortMode === "weighted") {
+    groups.sort(
+      (a, b) =>
+        weightedScore(b.totalVisits, b.lastVisitTime) -
+        weightedScore(a.totalVisits, a.lastVisitTime)
+    );
   } else {
     groups.sort((a, b) => b.lastVisitTime - a.lastVisitTime);
   }
 
+  // 置頂書籤（在 slice 前處理，確保置頂項目不被截掉）
+  groups = applyPinnedUrls(groups, settings.pinnedUrls || []);
+
   const topGroups = groups.slice(0, settings.maxResults);
 
   const folderId = await findOrCreateOutputFolder(settings.outputFolderName);
+
+  // 更新資料夾標題（含時間戳記）
+  let folderTitle = settings.outputFolderName;
+  if (settings.showTimestamp) {
+    const now = new Date();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const min = String(now.getMinutes()).padStart(2, "0");
+    folderTitle = `${settings.outputFolderName}（${mm}/${dd} ${hh}:${min}）`;
+  }
+  await browser.bookmarks.update(folderId, { title: folderTitle });
+
   await clearFolder(folderId);
   await writeBookmarks(folderId, topGroups);
+
+  // 快取結果供 popup 使用
+  await browser.storage.local.set({
+    cachedBookmarks: topGroups.map((g) => ({
+      title: g.title,
+      url: g.representativeUrl,
+      totalVisits: g.totalVisits,
+      lastVisitTime: g.lastVisitTime,
+    })),
+    cachedAt: Date.now(),
+  });
 
   console.info(`Auto Frequent Bookmarks：已寫入 ${topGroups.length} 筆。`);
 }
