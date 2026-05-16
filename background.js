@@ -3,15 +3,11 @@ const DEFAULT_SETTINGS = {
   sortMode: "lastVisit", // "lastVisit" | "visitCount" | "weighted"
   maxResults: 20,
   maxAgeDays: 0, // 0 = 不限制，其他為天數
-  outputFolderName: "🔥 常用書籤",
   refreshOnStartup: true,
   alarmInterval: 0, // 0 = 關閉，其他為分鐘數
   excludedDomains: [], // 排除的 hostname 清單
   pinnedUrls: [],      // 永遠置頂的 URL 清單
-  showTimestamp: false, // 是否在資料夾名稱後顯示更新時間
 };
-
-const TOOLBAR_ID = "toolbar_____";
 
 async function readSettings() {
   const stored = await browser.storage.local.get(DEFAULT_SETTINGS);
@@ -139,55 +135,6 @@ function applyPinnedUrls(groups, pinnedUrls) {
   return [...pinned, ...rest];
 }
 
-async function findOrCreateOutputFolder(name) {
-  // 優先用 storage 裡記住的 ID，讓資料夾可以被移動到任意位置
-  const { outputFolderId } = await browser.storage.local.get({ outputFolderId: null });
-  if (outputFolderId) {
-    try {
-      const nodes = await browser.bookmarks.get(outputFolderId);
-      if (nodes && nodes.length > 0 && !nodes[0].url) {
-        return outputFolderId;
-      }
-    } catch {
-      // ID 對應的資料夾已被刪除，繼續往下重建
-    }
-  }
-
-  // 找不到已存的 ID，改用名稱在工具列搜尋
-  const toolbarChildren = await browser.bookmarks.getChildren(TOOLBAR_ID);
-  const existing = toolbarChildren.find(
-    (n) => !n.url && (n.title === name || n.title.startsWith(name + "（"))
-  );
-  if (existing) {
-    await browser.storage.local.set({ outputFolderId: existing.id });
-    return existing.id;
-  }
-
-  // 完全找不到，在工具列新建
-  const created = await browser.bookmarks.create({
-    parentId: TOOLBAR_ID,
-    title: name,
-  });
-  await browser.storage.local.set({ outputFolderId: created.id });
-  return created.id;
-}
-
-async function clearFolder(folderId) {
-  const children = await browser.bookmarks.getChildren(folderId);
-  for (const child of children) {
-    await browser.bookmarks.removeTree(child.id);
-  }
-}
-
-async function writeBookmarks(folderId, groups) {
-  for (const group of groups) {
-    await browser.bookmarks.create({
-      parentId: folderId,
-      title: group.title,
-      url: group.representativeUrl,
-    });
-  }
-}
 
 async function runPipeline() {
   const settings = await readSettings();
@@ -236,23 +183,6 @@ async function runPipeline() {
   groups = applyPinnedUrls(groups, settings.pinnedUrls || []);
 
   const topGroups = groups.slice(0, settings.maxResults);
-
-  const folderId = await findOrCreateOutputFolder(settings.outputFolderName);
-
-  // 更新資料夾標題（含時間戳記）
-  let folderTitle = settings.outputFolderName;
-  if (settings.showTimestamp) {
-    const now = new Date();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    const hh = String(now.getHours()).padStart(2, "0");
-    const min = String(now.getMinutes()).padStart(2, "0");
-    folderTitle = `${settings.outputFolderName}（${mm}/${dd} ${hh}:${min}）`;
-  }
-  await browser.bookmarks.update(folderId, { title: folderTitle });
-
-  await clearFolder(folderId);
-  await writeBookmarks(folderId, topGroups);
 
   // 快取結果供 popup 使用
   await browser.storage.local.set({

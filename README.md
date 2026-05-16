@@ -6,7 +6,7 @@
 
 ## 繁體中文
 
-自動根據瀏覽歷史，將常用書籤整理到書籤工具列的指定資料夾。
+自動根據瀏覽歷史，將常用書籤整理並顯示在附加元件的彈出視窗中。
 
 ### 下載安裝
 
@@ -23,7 +23,6 @@
 - 點擊工具列圖示開啟快速書籤 Popup（含搜尋與造訪日期）
 - 可設定排除特定網域
 - 可置頂指定書籤，永遠排在最前
-- 可在輸出資料夾名稱後顯示更新時間
 
 ### 設定項目
 
@@ -33,8 +32,6 @@
 | 排序方式 | 最近造訪時間 / 總造訪次數 / 加權綜合 |
 | 最多顯示筆數 | 輸出書籤數量上限 |
 | 只顯示最近有造訪 | 不限制 / 1 個月 / 3 個月 / 6 個月 / 1 年 |
-| 輸出資料夾名稱 | 書籤工具列上的資料夾名稱 |
-| 顯示更新時間 | 在資料夾名稱後附加最後更新時間 |
 | 啟動時自動重新整理 | 開啟瀏覽器時自動執行 |
 | 定時自動更新 | 每隔指定時間自動執行（15 分鐘 ～ 24 小時） |
 | 排除清單 | 不希望出現的網域（每行一個 hostname） |
@@ -44,7 +41,7 @@
 
 ## English
 
-Automatically organizes your frequently visited bookmarks into a dedicated folder on the bookmarks toolbar, based on your browsing history.
+Automatically organizes your frequently visited bookmarks and displays them in a quick access popup, based on your browsing history.
 
 ### Download
 
@@ -61,7 +58,6 @@ Automatically organizes your frequently visited bookmarks into a dedicated folde
 - Toolbar icon popup for quick access with live search and last-visit dates
 - Domain exclusion list to hide unwanted sites
 - Pinned bookmarks always appear at the top regardless of sort order
-- Optional timestamp appended to the output folder name
 
 ### Settings
 
@@ -71,8 +67,6 @@ Automatically organizes your frequently visited bookmarks into a dedicated folde
 | Sort mode | Last visit time / Total visit count / Weighted (recency + frequency) |
 | Max results | Maximum number of bookmarks to output |
 | Recency filter | Off / Last 1 month / 3 months / 6 months / 1 year |
-| Output folder name | Name of the folder on the bookmarks toolbar |
-| Show timestamp | Append last update time to the folder name |
 | Refresh on startup | Auto-run when Firefox starts |
 | Auto-refresh interval | Run every N minutes/hours (15 min – 24 hr) |
 | Exclusion list | Hostnames to exclude from results (one per line) |

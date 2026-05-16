@@ -3,3 +3,5 @@ node_modules/
 *.xpi
 CLAUDE.md
 graphify-out/
+release-process.md
+firefox-review-notes.txt
