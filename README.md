@@ -21,6 +21,7 @@
 - 子資料夾預設不遞迴掃描，需明確勾選才納入
 - 支援瀏覽器啟動時自動更新、定時自動更新
 - 點擊工具列圖示開啟快速書籤 Popup（含搜尋與造訪日期）
+- Popup 快速置頂：在 Popup 列表右側提供 SVG 置頂按鈕，滑鼠移上時顯現，可直接點擊進行置頂/取消置頂，並同步更新至瀏覽器書籤列，無需每次進入設定頁
 - 可設定排除特定網域
 - 可置頂指定書籤，永遠排在最前
 
@@ -56,6 +57,7 @@ Automatically organizes your frequently visited bookmarks and displays them in a
 - Subfolders are not scanned by default — check them explicitly to include
 - Supports auto-refresh on browser startup and on a scheduled interval
 - Toolbar icon popup for quick access with live search and last-visit dates
+- Popup Quick-Pin: Convenient SVG pin buttons on the right side of popup items allow you to pin/unpin bookmarks instantly without opening the options page
 - Domain exclusion list to hide unwanted sites
 - Pinned bookmarks always appear at the top regardless of sort order
 

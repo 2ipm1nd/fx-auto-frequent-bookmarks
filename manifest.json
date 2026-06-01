@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Auto Frequent Bookmarks",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "根據瀏覽歷史自動整理常用書籤",
   "icons": {
     "48": "icons/icon-48.png",
@@ -33,7 +33,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "fx-auto-frequent-bookmarks@local",
-      "strict_min_version": "140.0",
+      "strict_min_version": "142.0",
       "data_collection_permissions": {
         "required": ["none"],
         "optional": []

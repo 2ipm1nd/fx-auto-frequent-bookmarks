@@ -1,4 +1,34 @@
 let allBookmarks = [];
+let pinnedUrls = [];
+function createSvgIcon(isFilled) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "14");
+  svg.setAttribute("height", "14");
+  svg.style.pointerEvents = "none";
+  if (isFilled) {
+    svg.setAttribute("fill", "currentColor");
+  } else {
+    svg.setAttribute("fill", "none");
+  }
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "2");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", "12");
+  line.setAttribute("y1", "17");
+  line.setAttribute("x2", "12");
+  line.setAttribute("y2", "22");
+  svg.appendChild(line);
+
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", "M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.12-2.65A2 2 0 0 1 16 10.11V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v5.11a2 2 0 0 1-.44 1.24L5.44 14a2 2 0 0 0-.44 1.24Z");
+  svg.appendChild(path);
+
+  return svg;
+}
 
 function formatAge(cachedAt) {
   if (!cachedAt) return "";
@@ -25,6 +55,9 @@ function renderList(bookmarks) {
   }
 
   for (const bm of bookmarks) {
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "bookmark-item";
+
     const a = document.createElement("a");
     a.href = bm.url;
     a.title = bm.url;
@@ -53,7 +86,57 @@ function renderList(bookmarks) {
       window.close();
     });
 
-    list.appendChild(a);
+    const isPinned = pinnedUrls.includes(bm.url);
+    const pinBtn = document.createElement("button");
+    pinBtn.className = "bm-pin-btn";
+    if (isPinned) {
+      pinBtn.classList.add("pinned");
+      pinBtn.appendChild(createSvgIcon(true));
+      pinBtn.title = "取消置頂";
+    } else {
+      pinBtn.appendChild(createSvgIcon(false));
+      pinBtn.title = "置頂此分頁";
+    }
+
+    pinBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      pinBtn.classList.add("loading");
+
+      let currentPinned = [...pinnedUrls];
+      if (isPinned) {
+        currentPinned = currentPinned.filter((url) => url !== bm.url);
+      } else {
+        currentPinned.push(bm.url);
+      }
+
+      pinnedUrls = currentPinned;
+      await browser.storage.local.set({ pinnedUrls: currentPinned });
+
+      try {
+        const response = await browser.runtime.sendMessage({ type: "REFRESH" });
+        if (response && response.success) {
+          const { cachedBookmarks, cachedAt } = await browser.storage.local.get({
+            cachedBookmarks: [],
+            cachedAt: null,
+          });
+          allBookmarks = cachedBookmarks || [];
+          renderList(filterBookmarks(document.getElementById("search").value));
+          document.getElementById("cached-at").textContent = formatAge(cachedAt);
+        } else {
+          console.error("重新整理失敗：", response?.error);
+          pinBtn.classList.remove("loading");
+        }
+      } catch (err) {
+        console.error("呼叫 Pipeline 錯誤：", err);
+        pinBtn.classList.remove("loading");
+      }
+    });
+
+    itemDiv.appendChild(a);
+    itemDiv.appendChild(pinBtn);
+    list.appendChild(itemDiv);
   }
 }
 
@@ -68,13 +151,22 @@ function formatDate(lastVisitTime) {
 }
 
 function filterBookmarks(query) {
-  if (!query) return allBookmarks;
-  const q = query.toLowerCase();
-  return allBookmarks.filter(
-    (bm) =>
-      bm.title.toLowerCase().includes(q) ||
-      bm.url.toLowerCase().includes(q)
-  );
+  let filtered = allBookmarks;
+  if (query) {
+    const q = query.toLowerCase();
+    filtered = allBookmarks.filter(
+      (bm) =>
+        bm.title.toLowerCase().includes(q) ||
+        bm.url.toLowerCase().includes(q)
+    );
+  }
+  return [...filtered].sort((a, b) => {
+    const aPinned = pinnedUrls.includes(a.url);
+    const bPinned = pinnedUrls.includes(b.url);
+    if (aPinned && !bPinned) return -1;
+    if (!aPinned && bPinned) return 1;
+    return 0;
+  });
 }
 
 document.getElementById("search").addEventListener("input", (e) => {
@@ -88,13 +180,15 @@ document.getElementById("open-options").addEventListener("click", (e) => {
 });
 
 async function init() {
-  const { cachedBookmarks, cachedAt } = await browser.storage.local.get({
+  const { cachedBookmarks, cachedAt, pinnedUrls: storedPinned } = await browser.storage.local.get({
     cachedBookmarks: [],
     cachedAt: null,
+    pinnedUrls: [],
   });
 
   allBookmarks = cachedBookmarks || [];
-  renderList(allBookmarks);
+  pinnedUrls = storedPinned || [];
+  renderList(filterBookmarks(""));
 
   document.getElementById("cached-at").textContent = formatAge(cachedAt);
   document.getElementById("search").focus();

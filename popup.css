@@ -47,7 +47,18 @@ body {
   padding: 4px 0;
 }
 
-#bookmark-list a {
+.bookmark-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  transition: background 0.2s ease;
+}
+
+.bookmark-item:hover {
+  background: #2b2a33;
+}
+
+.bookmark-item a {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -56,15 +67,69 @@ body {
   text-decoration: none;
   white-space: nowrap;
   overflow: hidden;
+  flex: 1;
 }
 
-#bookmark-list a:hover {
-  background: #2b2a33;
-}
-
-#bookmark-list a img {
+.bookmark-item a img {
   flex-shrink: 0;
 }
+
+/* 置頂按鈕樣式 */
+.bm-pin-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9e9ea0;
+  opacity: 0.3;
+  transition: opacity 0.2s ease, color 0.2s ease, transform 0.1s ease;
+  flex-shrink: 0;
+  outline: none;
+}
+
+/* 滑鼠移入整列或按鈕時，讓按鈕變清晰 */
+.bookmark-item:hover .bm-pin-btn {
+  opacity: 0.7;
+}
+
+.bm-pin-btn:hover {
+  opacity: 1 !important;
+  color: #fbfbfe;
+  transform: scale(1.15);
+}
+
+/* 已置頂的樣式 */
+.bm-pin-btn.pinned {
+  opacity: 0.85;
+  color: #9059ff; /* 亮紫色 */
+}
+
+.bookmark-item:hover .bm-pin-btn.pinned {
+  opacity: 1;
+}
+
+.bm-pin-btn.pinned:hover {
+  color: #a375ff;
+}
+
+.bm-pin-btn:active {
+  transform: scale(0.9);
+}
+
+/* 旋轉動畫（更新中狀態） */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.bm-pin-btn.loading {
+  animation: spin 1s linear infinite;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 
 .bm-title {
   flex: 1;
