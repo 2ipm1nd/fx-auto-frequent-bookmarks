@@ -2,6 +2,19 @@ const api = globalThis.browser ?? globalThis.chrome;
 
 let allBookmarks = [];
 let pinnedUrls = [];
+
+function isSafeHttpUrl(url) {
+  return typeof url === "string" && /^https?:\/\//i.test(url);
+}
+
+function getSafeHostname(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "";
+  }
+}
+
 function createSvgIcon(isFilled) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
@@ -57,15 +70,23 @@ function renderList(bookmarks) {
   }
 
   for (const bm of bookmarks) {
+    if (!isSafeHttpUrl(bm.url)) continue;
+
     const itemDiv = document.createElement("div");
     itemDiv.className = "bookmark-item";
 
     const a = document.createElement("a");
     a.href = bm.url;
     a.title = bm.url;
+    a.rel = "noopener noreferrer";
 
     const favicon = document.createElement("img");
-    favicon.src = `https://www.google.com/s2/favicons?sz=16&domain_url=${encodeURIComponent(bm.url)}`;
+    const hostname = getSafeHostname(bm.url);
+    // 僅傳送網域名稱 (hostname) 而不傳送完整 URL，保護書籤路徑、查詢參數與 Token 隱私
+    favicon.src = hostname
+      ? `https://www.google.com/s2/favicons?sz=16&domain=${encodeURIComponent(hostname)}`
+      : "";
+    favicon.referrerPolicy = "no-referrer";
     favicon.width = 16;
     favicon.height = 16;
     favicon.onerror = () => { favicon.style.visibility = "hidden"; };
@@ -84,8 +105,10 @@ function renderList(bookmarks) {
 
     a.addEventListener("click", (e) => {
       e.preventDefault();
-      api.tabs.create({ url: bm.url });
-      window.close();
+      if (isSafeHttpUrl(bm.url)) {
+        api.tabs.create({ url: bm.url });
+        window.close();
+      }
     });
 
     const isPinned = pinnedUrls.includes(bm.url);

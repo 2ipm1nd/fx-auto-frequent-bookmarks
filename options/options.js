@@ -89,7 +89,7 @@ async function saveSettings() {
     pinnedUrls: document.getElementById("pinned-urls").value
       .split("\n")
       .map((s) => s.trim())
-      .filter(Boolean),
+      .filter((s) => /^https?:\/\//i.test(s)),
   };
 
   await api.storage.local.set(settings);

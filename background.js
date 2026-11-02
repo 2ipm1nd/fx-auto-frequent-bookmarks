@@ -30,7 +30,10 @@ async function collectBookmarks(folderIds) {
     }
     for (const child of children) {
       if (child.url) {
-        results.push({ id: child.id, title: child.title, url: child.url });
+        // 僅收集標準 http/https 網頁書籤，排除 javascript:/data:/file:/about: 等特殊協定
+        if (/^https?:\/\//i.test(child.url)) {
+          results.push({ id: child.id, title: child.title, url: child.url });
+        }
       } else if (folderSet.has(child.id)) {
         await traverse(child.id);
       }
@@ -231,7 +234,15 @@ api.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
-api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+api.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // 驗證訊息來源必須為擴充套件自身，防止外部環境偽造訊息呼叫
+  if (sender && sender.id && sender.id !== api.runtime.id) {
+    return false;
+  }
+  if (!message || typeof message.type !== "string") {
+    return false;
+  }
+
   if (message.type === "REFRESH") {
     runPipeline()
       .then(() => sendResponse({ success: true }))
