@@ -24,11 +24,21 @@ jobs:
       - name: Install web-ext
         run: npm install -g web-ext
 
-      - name: Set version from tag
+      - name: Set version from tag (Self-hosted format)
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" manifest.json
-          echo "Version set to $VERSION"
+          VERSION=${TAG_NAME#v}
+          export VERSION
+          node -e '
+            const fs = require("fs");
+            const v = process.env.VERSION;
+            const m = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
+            m.version = `${v}.1`;
+            m.version_name = `${v}s`;
+            fs.writeFileSync("manifest.json", JSON.stringify(m, null, 2));
+          '
+          echo "Version set to ${VERSION}.1 (${VERSION}s)"
 
       - name: Sign extension (Firefox AMO self-hosted)
         run: |
@@ -39,8 +49,10 @@ jobs:
             --artifacts-dir=dist
 
       - name: Build Chrome Extension Package
+        env:
+          TAG_NAME: ${{ github.ref_name }}
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
+          VERSION=${TAG_NAME#v}
           mkdir -p build-chrome
           cp -r icons options background.js popup.css popup.html popup.js build-chrome/
           node -e '
@@ -50,7 +62,7 @@ jobs:
             delete m.browser_specific_settings;
             fs.writeFileSync("build-chrome/manifest.json", JSON.stringify(m, null, 2));
           '
-          cd build-chrome && zip -r "../dist/chrome-auto-frequent-bookmarks-${VERSION}.zip" . && cd ..
+          cd build-chrome && zip -r "../dist/chrome-auto-frequent-bookmarks-${VERSION}s.zip" . && cd ..
 
       - name: Find signed XPI
         id: xpi
