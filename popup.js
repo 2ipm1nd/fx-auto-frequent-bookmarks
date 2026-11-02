@@ -1,3 +1,5 @@
+const api = globalThis.browser ?? globalThis.chrome;
+
 let allBookmarks = [];
 let pinnedUrls = [];
 function createSvgIcon(isFilled) {
@@ -82,7 +84,7 @@ function renderList(bookmarks) {
 
     a.addEventListener("click", (e) => {
       e.preventDefault();
-      browser.tabs.create({ url: bm.url });
+      api.tabs.create({ url: bm.url });
       window.close();
     });
 
@@ -112,12 +114,12 @@ function renderList(bookmarks) {
       }
 
       pinnedUrls = currentPinned;
-      await browser.storage.local.set({ pinnedUrls: currentPinned });
+      await api.storage.local.set({ pinnedUrls: currentPinned });
 
       try {
-        const response = await browser.runtime.sendMessage({ type: "REFRESH" });
+        const response = await api.runtime.sendMessage({ type: "REFRESH" });
         if (response && response.success) {
-          const { cachedBookmarks, cachedAt } = await browser.storage.local.get({
+          const { cachedBookmarks, cachedAt } = await api.storage.local.get({
             cachedBookmarks: [],
             cachedAt: null,
           });
@@ -175,12 +177,12 @@ document.getElementById("search").addEventListener("input", (e) => {
 
 document.getElementById("open-options").addEventListener("click", (e) => {
   e.preventDefault();
-  browser.runtime.openOptionsPage();
+  api.runtime.openOptionsPage();
   window.close();
 });
 
 async function init() {
-  const { cachedBookmarks, cachedAt, pinnedUrls: storedPinned } = await browser.storage.local.get({
+  const { cachedBookmarks, cachedAt, pinnedUrls: storedPinned } = await api.storage.local.get({
     cachedBookmarks: [],
     cachedAt: null,
     pinnedUrls: [],

@@ -1,3 +1,5 @@
+const api = globalThis.browser ?? globalThis.chrome;
+
 const DEFAULT_SETTINGS = {
   sourceFolderIds: [],
   sortMode: "lastVisit", // "lastVisit" | "visitCount" | "weighted"
@@ -10,7 +12,7 @@ const DEFAULT_SETTINGS = {
 };
 
 async function readSettings() {
-  const stored = await browser.storage.local.get(DEFAULT_SETTINGS);
+  const stored = await api.storage.local.get(DEFAULT_SETTINGS);
   return { ...DEFAULT_SETTINGS, ...stored };
 }
 
@@ -21,7 +23,7 @@ async function collectBookmarks(folderIds) {
   async function traverse(nodeId) {
     let children;
     try {
-      children = await browser.bookmarks.getChildren(nodeId);
+      children = await api.bookmarks.getChildren(nodeId);
     } catch (e) {
       console.warn(`無法讀取資料夾 ${nodeId}:`, e);
       return;
@@ -52,7 +54,7 @@ async function queryVisits(bookmarks) {
   const visitMap = new Map();
   for (const bookmark of bookmarks) {
     try {
-      const visits = await browser.history.getVisits({ url: bookmark.url });
+      const visits = await api.history.getVisits({ url: bookmark.url });
       if (visits.length === 0) {
         visitMap.set(bookmark.url, { visitCount: 0, lastVisitTime: 0 });
       } else {
@@ -185,7 +187,7 @@ async function runPipeline() {
   const topGroups = groups.slice(0, settings.maxResults);
 
   // 快取結果供 popup 使用
-  await browser.storage.local.set({
+  await api.storage.local.set({
     cachedBookmarks: topGroups.map((g) => ({
       title: g.title,
       url: g.representativeUrl,
@@ -199,19 +201,22 @@ async function runPipeline() {
 }
 
 async function syncAlarm(settings) {
-  await browser.alarms.clear("autoRefresh");
+  await api.alarms.clear("autoRefresh");
   if (settings.alarmInterval > 0) {
-    browser.alarms.create("autoRefresh", {
+    api.alarms.create("autoRefresh", {
       periodInMinutes: settings.alarmInterval,
     });
   }
 }
 
-browser.runtime.onInstalled.addListener(() => {
+api.runtime.onInstalled.addListener(() => {
+  readSettings()
+    .then(syncAlarm)
+    .catch((err) => console.error("Alarm 同步錯誤：", err));
   runPipeline().catch((err) => console.error("Pipeline 安裝後首次執行錯誤：", err));
 });
 
-browser.runtime.onStartup.addListener(async () => {
+api.runtime.onStartup.addListener(async () => {
   const settings = await readSettings();
   if (settings.refreshOnStartup) {
     runPipeline().catch((err) => console.error("Pipeline 啟動錯誤：", err));
@@ -220,13 +225,13 @@ browser.runtime.onStartup.addListener(async () => {
   await syncAlarm(settings);
 });
 
-browser.alarms.onAlarm.addListener((alarm) => {
+api.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "autoRefresh") {
     runPipeline().catch((err) => console.error("Pipeline 定時執行錯誤：", err));
   }
 });
 
-browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+api.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "REFRESH") {
     runPipeline()
       .then(() => sendResponse({ success: true }))

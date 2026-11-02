@@ -1,3 +1,5 @@
+const api = globalThis.browser ?? globalThis.chrome;
+
 const DEFAULT_SETTINGS = {
   sourceFolderIds: [],
   sortMode: "lastVisit",
@@ -12,22 +14,27 @@ const DEFAULT_SETTINGS = {
 async function getAllFolders() {
   const folders = [];
 
-  async function traverse(nodeId, depth) {
-    let children;
-    try {
-      children = await browser.bookmarks.getChildren(nodeId);
-    } catch {
-      return;
-    }
-    for (const child of children) {
-      if (!child.url) {
-        folders.push({ id: child.id, title: child.title || "(未命名)", depth });
-        await traverse(child.id, depth + 1);
+  function traverseNodes(nodes, depth) {
+    for (const node of nodes) {
+      if (!node.url) {
+        // 略過最頂層無標題或虛擬 root 節點 (Chrome id === "0" 或 Firefox id === "root________" 或無 parentId)
+        const isRoot = node.id === "0" || node.id === "root________" || !node.parentId;
+        if (!isRoot) {
+          folders.push({ id: node.id, title: node.title || "(未命名)", depth });
+        }
+        if (node.children && node.children.length > 0) {
+          traverseNodes(node.children, isRoot ? depth : depth + 1);
+        }
       }
     }
   }
 
-  await traverse("root________", 0);
+  try {
+    const tree = await api.bookmarks.getTree();
+    traverseNodes(tree, 0);
+  } catch (e) {
+    console.error("無法讀取書籤樹：", e);
+  }
   return folders;
 }
 
@@ -56,7 +63,7 @@ function renderFolderTree(folders, selectedIds) {
 }
 
 async function loadSettings() {
-  return browser.storage.local.get(DEFAULT_SETTINGS);
+  return api.storage.local.get(DEFAULT_SETTINGS);
 }
 
 async function saveSettings() {
@@ -85,9 +92,9 @@ async function saveSettings() {
       .filter(Boolean),
   };
 
-  await browser.storage.local.set(settings);
+  await api.storage.local.set(settings);
   // 通知背景腳本同步 alarm 設定
-  browser.runtime.sendMessage({ type: "SYNC_ALARM" }).catch(() => {});
+  api.runtime.sendMessage({ type: "SYNC_ALARM" }).catch(() => {});
   return settings;
 }
 
@@ -113,7 +120,7 @@ document.getElementById("btn-save").addEventListener("click", async () => {
 document.getElementById("btn-refresh").addEventListener("click", async () => {
   try {
     await saveSettings();
-    const response = await browser.runtime.sendMessage({ type: "REFRESH" });
+    const response = await api.runtime.sendMessage({ type: "REFRESH" });
     if (response && response.success) {
       showStatus("書籤已重新整理完成。");
     } else {
